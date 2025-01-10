@@ -57,7 +57,7 @@ for epoch in range(num_epochs):
 Explore the `examples/` directory for more detailed use cases and advanced configurations.
 
 ## Contributing
-We welcome contributions from the community! If you have any ideas, suggestions, or bug reports, please submit an issue or a pull request on our [GitHub repository](https://github.com/your-username/neurotune).
+We welcome contributions from the community! If you have any ideas, suggestions, or bug reports, please submit an issue or a pull request on our [GitHub repository](https://github.com/PawanRamaMali/NeuroTune/).
 
 ## License
 **NeuroTune** is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
@@ -65,6 +65,3 @@ We welcome contributions from the community! If you have any ideas, suggestions,
 ## Contact
 If you have any questions or need further assistance, feel free to reach out to me @PawanRamaMali
 
----
-
-Feel free to modify this draft to better suit your project’s needs!
