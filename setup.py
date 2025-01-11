@@ -10,7 +10,7 @@ setup(
         "tqdm>=4.50.0",
     ],
     author="Pawan Rama Mali",
-    author_email="your.email@example.com",
+    author_email="prm@outlook.in",
     description="A powerful library for neural network fine-tuning",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
