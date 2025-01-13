@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, TensorDataset
+import matplotlib.pyplot as plt  # Added missing import
 from neurotune import OptiBrain, AdaptiveMomentum, ElasticLR, ConvergenceTracker
 from neurotune.utils import setup_logging, initialize_parameters
 
@@ -38,6 +39,7 @@ def compare_optimizers(model, train_loader, valid_loader, epochs=50):
     results = {}
     for name, optimizer in optimizers.items():
         print(f"\nTraining with {name}")
+        # Create a fresh model for each optimizer to ensure fair comparison
         model_copy = ComplexNet(model.network[0].in_features, 
                               [64, 32], 
                               model.network[-1].out_features)
@@ -59,7 +61,8 @@ def compare_optimizers(model, train_loader, valid_loader, epochs=50):
                 optimizer.step()
                 epoch_loss += loss.item()
             
-            train_losses.append(epoch_loss / len(train_loader))
+            avg_train_loss = epoch_loss / len(train_loader)
+            train_losses.append(avg_train_loss)
             
             # Validation
             model_copy.eval()
@@ -70,11 +73,12 @@ def compare_optimizers(model, train_loader, valid_loader, epochs=50):
                     loss = nn.MSELoss()(output, y_batch)
                     valid_loss += loss.item()
             
-            valid_losses.append(valid_loss / len(valid_loader))
+            avg_valid_loss = valid_loss / len(valid_loader)
+            valid_losses.append(avg_valid_loss)
             
             if epoch % 10 == 0:
-                print(f"Epoch {epoch}: Train Loss = {train_losses[-1]:.4f}, "
-                      f"Valid Loss = {valid_losses[-1]:.4f}")
+                print(f"Epoch {epoch}: Train Loss = {avg_train_loss:.4f}, "
+                      f"Valid Loss = {avg_valid_loss:.4f}")
         
         results[name] = {
             'train_losses': train_losses,
@@ -86,6 +90,9 @@ def compare_optimizers(model, train_loader, valid_loader, epochs=50):
 def main():
     # Setup logging
     setup_logging()
+    
+    # Set random seed for reproducibility
+    torch.manual_seed(42)
     
     # Generate synthetic dataset
     N_SAMPLES = 1000
