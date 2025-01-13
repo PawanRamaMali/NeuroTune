@@ -1,6 +1,7 @@
 import torch
 from torch.optim import Optimizer
 from typing import List, Optional, Dict, Any
+import math  # Added missing import
 
 class OptiBrain(Optimizer):
     """
