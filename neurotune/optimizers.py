@@ -92,29 +92,88 @@ class OptiBrain(Optimizer):
         return loss
 
 class AdaptiveMomentum(Optimizer):
-    """
-    AdaptiveMomentum optimizer: Implements momentum-based optimization with
-    adaptive learning rates based on gradient variance.
-    """
     def __init__(self, params, lr=1e-3, momentum=0.9, variance_window=10):
         defaults = dict(lr=lr, momentum=momentum, variance_window=variance_window)
         super().__init__(params, defaults)
         
+        # Initialize optimizer state
+        for group in self.param_groups:
+            for p in group['params']:
+                state = self.state[p]
+                state['momentum_buffer'] = torch.zeros_like(p.data)
+                state['variance_history'] = []
+    
     def step(self, closure=None):
-        """Performs a single optimization step."""
-        # Implementation details...
-        pass
+        loss = None
+        if closure is not None:
+            loss = closure()
+        
+        for group in self.param_groups:
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                
+                grad = p.grad.data
+                state = self.state[p]
+                
+                # Update variance history
+                if len(state['variance_history']) >= group['variance_window']:
+                    state['variance_history'].pop(0)
+                state['variance_history'].append(grad.var().item())
+                
+                # Compute adaptive learning rate
+                if len(state['variance_history']) > 0:
+                    variance = sum(state['variance_history']) / len(state['variance_history'])
+                    adaptive_lr = group['lr'] / (1 + variance)**0.5
+                else:
+                    adaptive_lr = group['lr']
+                
+                # Update momentum buffer
+                momentum_buffer = state['momentum_buffer']
+                momentum_buffer.mul_(group['momentum']).add_(grad)
+                
+                # Update parameters
+                p.data.add_(momentum_buffer, alpha=-adaptive_lr)
+        
+        return loss
 
 class ElasticLR(Optimizer):
-    """
-    ElasticLR optimizer: Implements elastic learning rate adjustment based on
-    loss landscape curvature.
-    """
     def __init__(self, params, lr=1e-3, curvature_window=5):
         defaults = dict(lr=lr, curvature_window=curvature_window)
         super().__init__(params, defaults)
         
+        # Initialize optimizer state
+        for group in self.param_groups:
+            for p in group['params']:
+                state = self.state[p]
+                state['prev_grad'] = torch.zeros_like(p.data)
+                state['step'] = 0
+    
     def step(self, closure=None):
-        """Performs a single optimization step."""
-        # Implementation details...
-        pass
+        loss = None
+        if closure is not None:
+            loss = closure()
+        
+        for group in self.param_groups:
+            for p in group['params']:
+                if p.grad is None:
+                    continue
+                
+                grad = p.grad.data
+                state = self.state[p]
+                state['step'] += 1
+                
+                # Compute curvature estimate
+                grad_diff = grad - state['prev_grad']
+                curvature = torch.abs(grad_diff).mean().item()
+                
+                # Update learning rate based on curvature
+                adaptive_lr = group['lr'] / (1 + curvature)
+                
+                # Update parameters
+                p.data.add_(grad, alpha=-adaptive_lr)
+                
+                # Store current gradient for next iteration
+                state['prev_grad'] = grad.clone()
+        
+        return loss
